@@ -1,0 +1,1108 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>学习管理系统</title>
+<style>
+:root {
+  --bg:#ffffff;--bg2:#f7f7f8;--bg3:#ededee;
+  --border:#e2e2e4;--border2:#d0d0d2;
+  --text:#1a1a1c;--text2:#6b6b72;--text3:#9b9ba2;
+  --purple:#534AB7;--purple-l:#EEEDFE;--purple-d:#3C3489;
+  --henry:#E6F1FB;--henry-t:#0C447C;
+  --anna:#FBEAF0;--anna-t:#72243E;
+  --both:#EEEDFE;--both-t:#3C3489;
+  --green:#27500A;--green-l:#EAF3DE;--green-b:#97C459;
+  --red:#791F1F;--red-l:#FCEBEB;--red-b:#F09595;
+  --orange:#633806;--orange-l:#FAEEDA;
+  --radius:10px;--radius-s:6px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--text);background:var(--bg2);min-height:100vh}
+
+/* LOGIN */
+#login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}
+.login-card{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:32px;max-width:400px;width:100%;text-align:center}
+.login-card h1{font-size:22px;margin-bottom:6px}
+.login-card p{font-size:14px;color:var(--text2);margin-bottom:28px}
+.identity-btns{display:flex;flex-direction:column;gap:10px;margin-bottom:20px}
+.id-btn{padding:14px;font-size:15px;border:1px solid var(--border2);border-radius:var(--radius);cursor:pointer;background:var(--bg);color:var(--text);transition:all 0.15s;text-align:left;display:flex;align-items:center;gap:12px}
+.id-btn:hover{border-color:var(--purple);background:var(--purple-l)}
+.id-btn .avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.id-btn .av-h{background:var(--henry);color:var(--henry-t)}
+.id-btn .av-a{background:var(--anna);color:var(--anna-t)}
+.id-btn .av-p{background:var(--purple-l);color:var(--purple)}
+.id-btn .id-info strong{display:block;font-size:14px}
+.id-btn .id-info span{font-size:12px;color:var(--text2)}
+.pin-wrap{display:none;flex-direction:column;gap:10px}
+.pin-wrap label{font-size:13px;color:var(--text2);text-align:left}
+.pin-row{display:flex;gap:8px}
+.pin-row input{flex:1;padding:10px;font-size:16px;text-align:center;letter-spacing:4px;border:1px solid var(--border2);border-radius:var(--radius-s)}
+.login-err{font-size:13px;color:#E24B4A;margin-top:6px;display:none}
+
+/* APP */
+#app{display:none;max-width:900px;margin:0 auto;padding:0 12px 40px}
+.app-header{display:flex;align-items:center;gap:10px;padding:14px 0 0;margin-bottom:0}
+.app-header h1{font-size:16px;font-weight:600;flex:1}
+.user-badge{font-size:12px;padding:3px 10px;border-radius:20px;font-weight:500}
+.ub-henry{background:var(--henry);color:var(--henry-t)}
+.ub-anna{background:var(--anna);color:var(--anna-t)}
+.ub-parent{background:var(--purple-l);color:var(--purple)}
+.sync-st{font-size:12px;color:var(--text3)}
+.sync-st.saving{color:var(--purple)}
+.sync-st.err{color:#E24B4A}
+
+/* NAV */
+.nav{display:flex;gap:2px;padding:12px 0 0;border-bottom:1px solid var(--border);overflow-x:auto;margin-bottom:16px}
+.nb{padding:8px 12px;font-size:13px;border:none;background:transparent;color:var(--text2);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap}
+.nb.active{color:var(--text);border-bottom-color:var(--purple);font-weight:500}
+.nb:hover:not(.active){color:var(--text)}
+
+/* TOPBAR */
+.topbar{display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.sfb{padding:4px 12px;font-size:12px;border:1px solid var(--border2);border-radius:20px;background:transparent;cursor:pointer;color:var(--text2)}
+.sfb.active{background:var(--purple-l);border-color:var(--purple);color:var(--purple-d)}
+.ml{margin-left:auto;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+
+/* FLASH */
+.flash{border-radius:var(--radius-s);padding:10px 14px;font-size:13px;margin-bottom:12px;display:none}
+.flash-g{background:var(--green-l);border:1px solid var(--green-b);color:var(--green)}
+.flash-r{background:var(--red-l);border:1px solid var(--red-b);color:var(--red)}
+
+/* SECTIONS */
+.sec{padding:4px 0 16px}
+.stitle{font-size:15px;font-weight:600;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.cb{background:var(--bg2);border:1px solid var(--border);border-radius:10px;font-size:12px;padding:1px 8px;color:var(--text2);font-weight:400}
+.empty{text-align:center;color:var(--text2);font-size:14px;padding:40px 0}
+
+/* CARD */
+.card{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:10px}
+.card-hd{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;gap:10px}
+.card-title{font-size:14px;font-weight:600;margin-top:4px}
+.card-meta{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:4px}
+
+/* BADGES */
+.badge{font-size:11px;padding:2px 8px;border-radius:10px;font-weight:500;white-space:nowrap;display:inline-block}
+.bh{background:var(--henry);color:var(--henry-t)}
+.ba{background:var(--anna);color:var(--anna-t)}
+.bb{background:var(--both);color:var(--both-t)}
+.bdue{background:var(--red-l);color:var(--red)}
+.brev{background:var(--orange-l);color:var(--orange)}
+.bsub{background:var(--bg2);color:var(--text2);border:1px solid var(--border)}
+
+/* FORMS */
+.aform{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:16px}
+.aft{font-size:14px;font-weight:600;margin-bottom:12px}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fg.full{grid-template-columns:1fr}
+.fg.t3{grid-template-columns:1fr 1fr 1fr}
+.fgrp{display:flex;flex-direction:column;margin-bottom:10px}
+label{font-size:12px;color:var(--text2);margin-bottom:4px;display:block}
+input,select,textarea{width:100%;padding:8px 10px;font-size:13px;border:1px solid var(--border2);border-radius:var(--radius-s);background:var(--bg);color:var(--text);font-family:inherit}
+textarea{resize:vertical;min-height:70px}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--purple);outline-offset:-1px}
+
+/* MISC */
+.btn{padding:7px 14px;font-size:13px;border:1px solid var(--border2);border-radius:var(--radius-s);cursor:pointer;background:var(--bg);color:var(--text);transition:all 0.15s}
+.btn:hover{background:var(--bg2)}
+.btn-primary{background:var(--purple);border-color:var(--purple);color:#fff}
+.btn-primary:hover{background:var(--purple-d)}
+.btn-sm{padding:4px 10px;font-size:12px}
+.btn-danger{border-color:#E24B4A;color:#E24B4A}
+.row{display:flex;gap:8px;align-items:center}
+.dtag{font-size:11px;color:var(--text3);background:var(--bg2);padding:2px 7px;border-radius:8px;white-space:nowrap}
+.ai-box{background:var(--purple-l);border:1px solid #AFA9EC;border-radius:var(--radius-s);padding:12px;font-size:13px;color:#26215C;line-height:1.6;margin-top:10px}
+.ai-lbl{font-size:11px;font-weight:600;color:var(--purple);margin-bottom:4px}
+.fb-box{background:#E1F5EE;border:1px solid #5DCAA5;border-radius:var(--radius-s);padding:12px;font-size:13px;color:#04342C;line-height:1.6;margin-top:10px}
+.meta{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)}
+.mi{display:flex;gap:4px}
+.mi-l{color:var(--text2);white-space:nowrap;flex-shrink:0}
+.mi-v{color:var(--text);line-height:1.5}
+.draft-row{display:flex;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px}
+.draft-row:last-child{border-bottom:none}
+.qa-row{background:var(--bg2);border-radius:var(--radius-s);padding:10px;margin-bottom:8px;font-size:13px}
+.ref-block{border-left:2px solid #AFA9EC;padding:8px 12px;margin-bottom:8px;background:var(--bg2);border-radius:0 6px 6px 0}
+.ref-block:last-child{margin-bottom:0}
+.ssel{padding:3px 8px;font-size:12px;border:1px solid var(--border2);border-radius:4px;background:var(--bg);color:var(--text);cursor:pointer}
+.pip{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:4px;vertical-align:middle}
+.pbw{height:4px;background:var(--bg3);border-radius:2px;margin-top:5px}
+.pbf{height:4px;background:var(--purple);border-radius:2px}
+.sbar{position:relative;margin-bottom:12px}
+.sbar input{padding-left:30px}
+.sicon{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--text3);pointer-events:none}
+.frow{display:flex;gap:5px;margin-bottom:12px;flex-wrap:wrap}
+.fchip{padding:3px 10px;font-size:12px;border:1px solid var(--border2);border-radius:20px;cursor:pointer;background:transparent;color:var(--text2)}
+.fchip.active{background:var(--purple);border-color:var(--purple);color:#fff}
+.test-q{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:10px}
+.sch-row{display:grid;grid-template-columns:auto 1fr auto auto;gap:12px;align-items:center;padding:8px;border-bottom:1px solid var(--border);font-size:13px}
+.sch-row:last-child{border-bottom:none}
+.iobtn{display:flex;align-items:center;gap:5px;padding:5px 10px;font-size:12px;border:1px solid var(--border2);border-radius:var(--radius-s);cursor:pointer;background:transparent;color:var(--text2)}
+.iobtn:hover{background:var(--bg2)}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid var(--border);border-top-color:var(--purple);border-radius:50%;animation:spin 0.7s linear infinite;vertical-align:middle;margin-right:6px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-overlay{text-align:center;padding:40px;color:var(--text2);font-size:14px}
+.readonly-notice{background:var(--orange-l);border:1px solid #e6c07a;border-radius:var(--radius-s);padding:8px 12px;font-size:12px;color:var(--orange);margin-bottom:14px}
+
+/* MODAL */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:200;align-items:center;justify-content:center}
+.overlay.open{display:flex}
+.modal{background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius);padding:20px;width:90%;max-width:460px}
+.modal h3{font-size:15px;font-weight:600;margin-bottom:10px}
+.modal textarea{min-height:140px;font-size:12px;font-family:monospace;margin-bottom:10px}
+
+@media(max-width:600px){
+  .fg{grid-template-columns:1fr}
+  .fg.t3{grid-template-columns:1fr}
+  .sch-row{grid-template-columns:auto 1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-card">
+    <h1>📚 学习管理系统</h1>
+    <p>请选择你的身份</p>
+    <div class="identity-btns">
+      <button class="id-btn" onclick="loginAs('Henry')">
+        <div class="avatar av-h">H</div>
+        <div class="id-info"><strong>Henry</strong><span>查看我的学习记录</span></div>
+      </button>
+      <button class="id-btn" onclick="loginAs('Annabella')">
+        <div class="avatar av-a">A</div>
+        <div class="id-info"><strong>Annabella</strong><span>查看我的学习记录</span></div>
+      </button>
+      <button class="id-btn" onclick="showPinInput()">
+        <div class="avatar av-p">👩‍👧‍👦</div>
+        <div class="id-info"><strong>家长</strong><span>管理所有记录</span></div>
+      </button>
+    </div>
+    <div class="pin-wrap" id="pin-wrap">
+      <label>请输入家长 PIN 码</label>
+      <div class="pin-row">
+        <input type="password" id="pin-input" maxlength="4" placeholder="••••" oninput="onPinInput()" onkeydown="if(event.key==='Enter')checkPin()">
+        <button class="btn btn-primary" onclick="checkPin()">确认</button>
+      </div>
+      <div class="login-err" id="pin-err">PIN 码错误，请重试</div>
+    </div>
+  </div>
+</div>
+
+<!-- IMPORT MODAL -->
+<div class="overlay" id="imp-overlay">
+  <div class="modal">
+    <h3>导入数据</h3>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:10px">粘贴之前导出的 JSON 内容，确认后覆盖当前数据。</p>
+    <textarea id="imp-json" placeholder="粘贴 JSON..."></textarea>
+    <div class="row"><button class="btn btn-primary" onclick="doImport()">确认导入</button><button class="btn" onclick="closeImp()">取消</button></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="app-header">
+    <h1>📚 学习管理系统</h1>
+    <span id="user-badge" class="user-badge"></span>
+    <span class="sync-st" id="sync-status">已连接</span>
+    <button class="btn btn-sm" style="font-size:11px;color:var(--text3)" onclick="logout()">退出</button>
+  </div>
+
+  <div class="nav">
+    <button class="nb active" onclick="go('tb')">教材索引</button>
+    <button class="nb" onclick="go('er')">错题库</button>
+    <button class="nb" onclick="go('gr')">语法记录</button>
+    <button class="nb" onclick="go('wr')">写作</button>
+    <button class="nb" onclick="go('rd')">阅读</button>
+    <button class="nb" onclick="go('hw')">作业</button>
+    <button class="nb" onclick="go('sc')">复习计划</button>
+    <button class="nb" onclick="go('ts')">检测</button>
+  </div>
+
+  <div id="flash" class="flash"></div>
+
+  <div class="topbar">
+    <div id="sf-wrap" style="display:flex;gap:4px">
+      <button class="sfb active" data-v="all" onclick="setSt('all')">全部</button>
+      <button class="sfb" data-v="Henry" onclick="setSt('Henry')">Henry</button>
+      <button class="sfb" data-v="Annabella" onclick="setSt('Annabella')">Annabella</button>
+    </div>
+    <div class="ml">
+      <button class="iobtn" id="btn-export" onclick="doExport()">⬇ 导出</button>
+      <button class="iobtn" id="btn-import" onclick="openImp()">⬆ 导入</button>
+      <div id="tba"></div>
+    </div>
+  </div>
+
+  <!-- TEXTBOOK -->
+  <div id="tab-tb" class="sec">
+    <div class="stitle">教材索引 <span class="cb" id="tbc">0</span></div>
+    <div class="aform" id="tbf" style="display:none">
+      <div class="aft">录入知识点 + 教材对应</div>
+      <div class="fg">
+        <div class="fgrp"><label>适用学生</label><select id="tb-st"><option value="Henry">Henry</option><option value="Annabella">Annabella</option><option value="both">两人共用</option></select></div>
+        <div class="fgrp"><label>科目</label><select id="tb-su"><option>Math</option><option>ELA</option><option>Grammar</option><option>Science</option><option>History</option><option>其他</option></select></div>
+      </div>
+      <div class="fgrp"><label>知识点名称</label><input id="tb-tp" placeholder="e.g. 分数除法 / Proportional Relationships"></div>
+      <div class="fgrp"><label>CA 标准代码（选填）</label><input id="tb-std" placeholder="e.g. 7.NS.A.1 / 7.EE.B.4"></div>
+      <div id="tb-refs">
+        <div style="font-size:12px;color:var(--text2);margin-bottom:8px">教材 / 练习册引用</div>
+        <div class="ref-entry" style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-s);padding:10px;margin-bottom:8px">
+          <div class="fg t3">
+            <div class="fgrp"><label>教材名称</label><input class="rbn" placeholder="e.g. Primary Math 5A"></div>
+            <div class="fgrp"><label>章节</label><input class="rch" placeholder="e.g. Chapter 3"></div>
+            <div class="fgrp"><label>页码（选填）</label><input class="rpg" placeholder="e.g. pp.42–55"></div>
+          </div>
+          <div class="fgrp"><label>练习题（选填）</label><input class="rex" placeholder="e.g. Ex 3A Q1–10"></div>
+        </div>
+      </div>
+      <button class="btn btn-sm" onclick="addRef()" style="margin-bottom:12px">+ 添加教材</button>
+      <div class="fgrp"><label>备注</label><input id="tb-nt"></div>
+      <div class="row"><button class="btn btn-primary" onclick="saveTB()">保存</button><button class="btn" onclick="tf('tbf')">取消</button></div>
+    </div>
+    <div class="sbar"><span class="sicon">🔍</span><input id="tb-q" placeholder="搜索知识点、教材名…" oninput="rTB()"></div>
+    <div class="frow" id="tb-sf"><button class="fchip active" data-s="" onclick="setTBF('')">全部科目</button></div>
+    <div id="tb-list"></div>
+  </div>
+
+  <!-- ERRORS -->
+  <div id="tab-er" class="sec" style="display:none">
+    <div class="stitle">错题库 <span class="cb" id="erc">0</span></div>
+    <div class="aform" id="erf" style="display:none">
+      <div class="aft">录入新错题</div>
+      <div class="fg">
+        <div class="fgrp"><label>学生</label><select id="ef-st"><option>Henry</option><option>Annabella</option></select></div>
+        <div class="fgrp"><label>科目</label><input id="ef-su" placeholder="Math / ELA / Science..."></div>
+      </div>
+      <div class="fgrp"><label>知识点</label><input id="ef-tp"></div>
+      <div class="fgrp"><label>题目内容</label><textarea id="ef-q" placeholder="粘贴原题..."></textarea></div>
+      <div class="fg">
+        <div class="fgrp"><label>错误答案</label><input id="ef-wr"></div>
+        <div class="fgrp"><label>正确答案</label><input id="ef-co"></div>
+      </div>
+      <div class="fg">
+        <div class="fgrp"><label>错误原因</label><input id="ef-re" placeholder="e.g. 概念混淆、计算失误..."></div>
+        <div class="fgrp"><label>知识点所在位置</label><input id="ef-lo" placeholder="e.g. Primary Math 5A Ch.3 p.42"></div>
+      </div>
+      <div class="fgrp" style="max-width:220px"><label>发生日期</label><input type="date" id="ef-dt"></div>
+      <div class="row"><button class="btn btn-primary" id="ef-sv" onclick="saveErr()">保存并AI分析</button><button class="btn" onclick="tf('erf')">取消</button></div>
+    </div>
+    <div id="er-list"></div>
+  </div>
+
+  <!-- GRAMMAR -->
+  <div id="tab-gr" class="sec" style="display:none">
+    <div class="stitle">语法记录 <span class="cb" id="grc">0</span></div>
+    <div class="aform" id="grf" style="display:none">
+      <div class="aft">录入语法错误记录</div>
+      <div class="fg">
+        <div class="fgrp"><label>学生</label><select id="gf-st"><option>Henry</option><option>Annabella</option></select></div>
+        <div class="fgrp"><label>年级</label><select id="gf-gr"><option>Grade 1</option><option>Grade 2</option><option>Grade 3</option><option>Grade 4</option><option>Grade 5</option><option>Grade 6</option><option selected>Grade 7</option><option>Grade 8</option></select></div>
+      </div>
+      <div class="fg">
+        <div class="fgrp"><label>错误类型</label><select id="gf-et"><option>Verb Tense</option><option>Subject-Verb Agreement</option><option>Punctuation</option><option>Capitalization</option><option>Pronoun</option><option>Article</option><option>Preposition</option><option>Sentence Structure</option><option>Run-on Sentence</option><option>Fragment</option><option>Spelling</option><option>Other</option></select></div>
+        <div class="fgrp"><label>教材 / 练习册</label><input id="gf-bk" placeholder="e.g. Easy Grammar Grade 7"></div>
+      </div>
+      <div class="fgrp"><label>对应章节</label><input id="gf-ch" placeholder="e.g. Unit 3 — Perfect Tenses"></div>
+      <div class="fgrp"><label>题目 / 原句</label><textarea id="gf-q" placeholder="粘贴原题或原句..."></textarea></div>
+      <div class="fg">
+        <div class="fgrp"><label>孩子的错误答案</label><input id="gf-wr"></div>
+        <div class="fgrp"><label>正确答案</label><input id="gf-co"></div>
+      </div>
+      <div class="fgrp"><label>错误说明（可选）</label><input id="gf-ex" placeholder="e.g. 混淆了 have been 和 had been"></div>
+      <div class="fgrp" style="max-width:220px"><label>发生日期</label><input type="date" id="gf-dt"></div>
+      <div class="row"><button class="btn btn-primary" id="gf-sv" onclick="saveGr()">保存并AI分析</button><button class="btn" onclick="tf('grf')">取消</button></div>
+    </div>
+    <div class="sbar"><span class="sicon">🔍</span><input id="gr-q" placeholder="搜索错误类型、教材名…" oninput="rGR()"></div>
+    <div class="frow" id="gr-type-filters"><button class="fchip active" data-et="" onclick="setGRF('')">全部类型</button></div>
+    <div id="gr-list"></div>
+  </div>
+
+  <!-- WRITING -->
+  <div id="tab-wr" class="sec" style="display:none">
+    <div class="stitle">写作记录 <span class="cb" id="wrc">0</span></div>
+    <div class="aform" id="wrf" style="display:none">
+      <div class="aft">录入写作任务</div>
+      <div class="fg">
+        <div class="fgrp"><label>学生</label><select id="wf-st"><option>Henry</option><option>Annabella</option></select></div>
+        <div class="fgrp"><label>作业标题</label><input id="wf-ti"></div>
+      </div>
+      <div class="fg">
+        <div class="fgrp"><label>写作类型</label><select id="wf-ty"><option>Narrative</option><option>Persuasive</option><option>Expository</option><option>Descriptive</option><option>Research</option><option>Creative</option><option>其他</option></select></div>
+        <div class="fgrp"><label>稿次</label><select id="wf-dr"><option value="1">Draft 1</option><option value="2">Draft 2</option><option value="3">Draft 3</option><option value="Final">Final</option></select></div>
+      </div>
+      <div class="fgrp"><label>稿件内容</label><textarea id="wf-co" style="min-height:100px"></textarea></div>
+      <div class="fgrp"><label>关键发现 / 修改重点</label><input id="wf-nt"></div>
+      <div class="row"><button class="btn btn-primary" id="wf-sv" onclick="saveWr()">保存并AI评分</button><button class="btn" onclick="tf('wrf')">取消</button></div>
+    </div>
+    <div id="wr-list"></div>
+  </div>
+
+  <!-- READING -->
+  <div id="tab-rd" class="sec" style="display:none">
+    <div class="stitle">阅读记录 <span class="cb" id="rdc">0</span></div>
+    <div class="aform" id="rdf" style="display:none">
+      <div class="aft">录入阅读记录</div>
+      <div class="fg">
+        <div class="fgrp"><label>学生</label><select id="rf-st"><option>Henry</option><option>Annabella</option></select></div>
+        <div class="fgrp"><label>书名</label><input id="rf-bk"></div>
+      </div>
+      <div class="fg">
+        <div class="fgrp"><label>作者</label><input id="rf-au"></div>
+        <div class="fgrp"><label>章节 / 页码</label><input id="rf-pg"></div>
+      </div>
+      <div id="rf-qas">
+        <div class="fgrp"><label>问题 1</label><input class="rq" placeholder="阅读理解问题"></div>
+        <div class="fgrp"><label>孩子的回答</label><textarea class="ra"></textarea></div>
+      </div>
+      <button class="btn btn-sm" onclick="addQA()" style="margin-bottom:10px">+ 添加问题</button>
+      <div class="fgrp"><label>关键发现 / 备注</label><input id="rf-nt"></div>
+      <div class="row"><button class="btn btn-primary" id="rf-sv" onclick="saveRd()">保存并AI批改</button><button class="btn" onclick="tf('rdf')">取消</button></div>
+    </div>
+    <div id="rd-list"></div>
+  </div>
+
+  <!-- HOMEWORK -->
+  <div id="tab-hw" class="sec" style="display:none">
+    <div class="stitle">作业 <span class="cb" id="hwc">0</span></div>
+    <div class="aform" id="hwf" style="display:none">
+      <div class="aft">布置新作业</div>
+      <div class="fg">
+        <div class="fgrp"><label>学生</label><select id="hw-st"><option value="Henry">Henry</option><option value="Annabella">Annabella</option><option value="both">两人共用</option></select></div>
+        <div class="fgrp"><label>科目</label><select id="hw-su"><option>Math</option><option>ELA</option><option>Grammar</option><option>Science</option><option>History</option><option>其他</option></select></div>
+      </div>
+      <div class="fgrp"><label>作业内容</label><textarea id="hw-co" placeholder="描述作业内容，可以粘贴..."></textarea></div>
+      <div class="fg">
+        <div class="fgrp"><label>布置日期</label><input type="date" id="hw-as"></div>
+        <div class="fgrp"><label>截止日期</label><input type="date" id="hw-due"></div>
+      </div>
+      <div class="fgrp"><label>备注（可选）</label><input id="hw-nt" placeholder="e.g. 参考课本第3章..."></div>
+      <div class="row"><button class="btn btn-primary" onclick="saveHW()">保存</button><button class="btn" onclick="tf('hwf')">取消</button></div>
+    </div>
+
+    <!-- filter bar -->
+    <div class="frow" id="hw-status-filters">
+      <button class="fchip active" data-hs="" onclick="setHWF('')">全部</button>
+      <button class="fchip" data-hs="未开始" onclick="setHWF('未开始')">未开始</button>
+      <button class="fchip" data-hs="进行中" onclick="setHWF('进行中')">进行中</button>
+      <button class="fchip" data-hs="已完成" onclick="setHWF('已完成')">已完成</button>
+    </div>
+    <div id="hw-list"></div>
+  </div>
+
+  <!-- SCHEDULE -->
+  <div id="tab-sc" class="sec" style="display:none">
+    <div class="stitle">复习计划</div>
+    <div id="sc-list"></div>
+  </div>
+
+  <!-- TEST -->
+  <div id="tab-ts" class="sec" style="display:none">
+    <div class="stitle">知识点检测</div>
+    <div id="ts-setup">
+      <div class="card" style="margin-bottom:14px">
+        <div class="fg" style="margin-bottom:12px">
+          <div class="fgrp"><label>检测学生</label><select id="ts-st" onchange="filterTopics()"><option value="Henry">Henry</option><option value="Annabella">Annabella</option></select></div>
+          <div class="fgrp"><label>题库来源</label><select id="ts-src" onchange="filterTopics()"><option value="errors">错题库</option><option value="grammar">语法记录</option></select></div>
+        </div>
+        <div class="fgrp"><label>选择知识点（可不选）</label><select id="ts-tp"><option value="">-- 全部未掌握 --</option></select></div>
+        <button class="btn btn-primary" style="margin-top:8px" onclick="startTest()">开始检测</button>
+      </div>
+    </div>
+    <div id="ts-content" style="display:none"></div>
+  </div>
+</div>
+
+<script>
+// ── CONFIG ─────────────────────────────────────────────────
+const API_URL = 'https://script.google.com/macros/s/AKfycby60so74WUKN0j1punLqCpZAvdaRuhzLB-r1vanHMomsufGKkMq7iZMHgZtK79Fpsyi/exec';
+const PARENT_PIN = '2580'; // 家长 PIN 码，可以自行修改
+
+// ── STATE ──────────────────────────────────────────────────
+let db = { version:'1.0', errors:[], grammar:[], writings:[], readings:[], textbook:[], homework:[] };
+let curUser = null;   // 'Henry' | 'Annabella' | 'parent'
+let curSt   = 'all';
+let curTab  = 'tb';
+let tbFilter = '', grFilter = '';
+let isParent = false;
+
+// ── LOGIN ──────────────────────────────────────────────────
+function loginAs(who) {
+  curUser = who;
+  isParent = false;
+  // Lock student filter to their own name
+  curSt = who;
+  startApp();
+}
+
+function showPinInput() {
+  document.getElementById('pin-wrap').style.display = 'flex';
+  document.getElementById('pin-input').focus();
+}
+
+function onPinInput() {
+  document.getElementById('pin-err').style.display = 'none';
+}
+
+function checkPin() {
+  const pin = document.getElementById('pin-input').value;
+  if (pin === PARENT_PIN) {
+    curUser = 'parent';
+    isParent = true;
+    curSt = 'all';
+    startApp();
+  } else {
+    document.getElementById('pin-err').style.display = 'block';
+    document.getElementById('pin-input').value = '';
+  }
+}
+
+function startApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+
+  // User badge
+  const badge = document.getElementById('user-badge');
+  if (curUser === 'Henry')    { badge.textContent = 'Henry';    badge.className = 'user-badge ub-henry'; }
+  if (curUser === 'Annabella'){ badge.textContent = 'Annabella';badge.className = 'user-badge ub-anna'; }
+  if (curUser === 'parent')   { badge.textContent = '家长';     badge.className = 'user-badge ub-parent'; }
+
+  // Student filter: students only see themselves, parent sees all
+  const sfWrap = document.getElementById('sf-wrap');
+  if (!isParent) {
+    sfWrap.style.display = 'none'; // hide filter for students
+  } else {
+    sfWrap.style.display = 'flex';
+  }
+
+  // Export/import only for parent
+  document.getElementById('btn-export').style.display = isParent ? '' : 'none';
+  document.getElementById('btn-import').style.display = isParent ? '' : 'none';
+
+  loadData();
+}
+
+function logout() {
+  curUser = null; isParent = false;
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('pin-wrap').style.display = 'none';
+  document.getElementById('pin-input').value = '';
+  document.getElementById('pin-err').style.display = 'none';
+}
+
+// ── API ────────────────────────────────────────────────────
+function setSS(msg, cls='') {
+  const el = document.getElementById('sync-status');
+  el.textContent = msg; el.className = 'sync-st ' + cls;
+}
+
+async function apiGet() {
+  setSS('读取中…','saving');
+  try {
+    const r = await fetch(API_URL);
+    const j = await r.json();
+    setSS('已同步');
+    return j.data || db;
+  } catch(e) { setSS('读取失败','err'); return db; }
+}
+
+async function apiPost(body) {
+  setSS('保存中…','saving');
+  try {
+    const r = await fetch(API_URL, { method:'POST', body:JSON.stringify(body), headers:{'Content-Type':'application/json'} });
+    const j = await r.json();
+    setSS(j.ok ? '已保存 ✓' : '保存失败', j.ok ? '' : 'err');
+    return j;
+  } catch(e) { setSS('保存失败','err'); return {ok:false}; }
+}
+
+async function loadData() {
+  document.getElementById('tb-list').innerHTML = '<div class="loading-overlay"><span class="spinner"></span>加载中…</div>';
+  db = await apiGet();
+  if (!db.homework) db.homework = [];
+  buildTBF(); buildGRF(); render();
+}
+
+// ── AI ─────────────────────────────────────────────────────
+async function callAI(prompt) {
+  const r = await fetch('https://api.anthropic.com/v1/messages', {
+    method:'POST',
+    headers:{'Content-Type':'application/json','anthropic-dangerous-direct-browser-access':'true'},
+    body:JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:800, messages:[{role:'user',content:prompt}] })
+  });
+  if (!r.ok) throw new Error(r.status);
+  return (await r.json()).content?.[0]?.text || '';
+}
+
+// ── UTILS ──────────────────────────────────────────────────
+function today() { const d=new Date(); return d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate()); }
+function p2(n)   { return String(n).padStart(2,'0'); }
+function fd(iso) { if(!iso)return''; const d=new Date(iso); return d.getFullYear()+'/'+(d.getMonth()+1)+'/'+p2(d.getDate()); }
+function dfn(iso){ return Math.round((new Date(iso)-new Date())/86400000); }
+function sm(n)   { return n>=80?'#27500A':n>=60?'#633806':'#791F1F'; }
+function rvD(a)  { return[1,3,7,14,30,60].map(i=>{const r=new Date(a);r.setDate(r.getDate()+i);return r;}); }
+function nrv(a)  { const now=new Date(); return rvD(a).find(d=>d>=now)||rvD(a).pop(); }
+function vv(id)  { return (document.getElementById(id)||{}).value||''; }
+function sv(id,v){ const el=document.getElementById(id); if(el)el.value=v; }
+
+// Filter records based on current user
+function fil(arr) {
+  const a = arr || [];
+  if (isParent) {
+    if (curSt === 'all') return a;
+    return a.filter(x => x.student === curSt || x.student === 'both');
+  } else {
+    // Students only see their own records
+    return a.filter(x => x.student === curUser || x.student === 'both');
+  }
+}
+
+function flash(msg, type='g') {
+  const el = document.getElementById('flash');
+  el.className = 'flash flash-'+type;
+  el.textContent = msg; el.style.display = 'block';
+  setTimeout(()=>el.style.display='none', 3000);
+}
+
+// Guard: only parent can write
+function requireParent() {
+  if (!isParent) { flash('仅家长可以录入和修改记录', 'r'); return false; }
+  return true;
+}
+
+// ── NAV ────────────────────────────────────────────────────
+const TABS = ['tb','er','gr','wr','rd','hw','sc','ts'];
+function go(t) {
+  curTab = t;
+  document.querySelectorAll('.nb').forEach((b,i) => b.classList.toggle('active', TABS[i]===t));
+  TABS.forEach(n => document.getElementById('tab-'+n).style.display = n===t ? 'block' : 'none');
+
+  // Add buttons only for parent
+  const bmap  = { tb:'+ 录入知识点', er:'+ 录入错题', gr:'+ 录入语法记录', wr:'+ 录入写作', rd:'+ 录入阅读', hw:'+ 布置作业' };
+  const fmap  = { tb:'tbf', er:'erf', gr:'grf', wr:'wrf', rd:'rdf', hw:'hwf' };
+  if (isParent && bmap[t]) {
+    document.getElementById('tba').innerHTML = `<button class="btn btn-primary btn-sm" onclick="tf('${fmap[t]}')">${bmap[t]}</button>`;
+  } else {
+    document.getElementById('tba').innerHTML = '';
+  }
+
+  if (t==='sc') rSC();
+  if (t==='ts') { setupTestStudentFilter(); filterTopics(); }
+  if (t==='er' && !vv('ef-dt')) sv('ef-dt', today());
+  if (t==='gr' && !vv('gf-dt')) sv('gf-dt', today());
+  if (t==='hw') { if (!vv('hw-as')) sv('hw-as', today()); rHW(); return; }
+  render();
+}
+
+function setSt(s) {
+  curSt = s;
+  document.querySelectorAll('.sfb').forEach(b => b.classList.toggle('active', b.dataset.v===s));
+  render();
+}
+
+function tf(id) {
+  if (!requireParent()) return;
+  const el = document.getElementById(id);
+  const opening = el.style.display === 'none';
+  el.style.display = opening ? 'block' : 'none';
+  if (opening && id==='erf' && !vv('ef-dt')) sv('ef-dt', today());
+  if (opening && id==='grf' && !vv('gf-dt')) sv('gf-dt', today());
+  if (opening && id==='hwf') { if (!vv('hw-as')) sv('hw-as', today()); }
+}
+
+// ── EXPORT / IMPORT ────────────────────────────────────────
+function doExport() {
+  const blob = new Blob([JSON.stringify({exportedAt:new Date().toISOString(),data:db},null,2)],{type:'application/json'});
+  const u = URL.createObjectURL(blob), a = document.createElement('a');
+  a.href=u; a.download='lms_backup_'+today()+'.json'; a.click();
+  URL.revokeObjectURL(u);
+  flash('已导出 lms_backup_'+today()+'.json');
+}
+function openImp()  { document.getElementById('imp-overlay').classList.add('open'); document.getElementById('imp-json').value=''; }
+function closeImp() { document.getElementById('imp-overlay').classList.remove('open'); }
+async function doImport() {
+  const raw = document.getElementById('imp-json').value.trim();
+  if (!raw) { flash('请粘贴 JSON 内容','r'); return; }
+  try {
+    const p=JSON.parse(raw), d=p.data||p;
+    db = { errors:d.errors||[], grammar:d.grammar||[], writings:d.writings||[], readings:d.readings||[], textbook:d.textbook||[], homework:d.homework||[] };
+    await apiPost({ action:'write', db });
+    buildTBF(); buildGRF(); render();
+    closeImp(); flash('导入成功，共'+(db.errors.length+db.grammar.length+db.writings.length+db.readings.length+db.textbook.length+(db.homework||[]).length)+'条记录');
+  } catch(e) { flash('JSON 格式错误','r'); }
+}
+
+// ── TEXTBOOK ───────────────────────────────────────────────
+function addRef() {
+  const div = document.createElement('div');
+  div.className = 'ref-entry';
+  div.style.cssText = 'background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-s);padding:10px;margin-bottom:8px';
+  div.innerHTML = '<div class="fg t3"><div class="fgrp"><label>教材名称</label><input class="rbn" placeholder="e.g. Beast Academy 5B"></div><div class="fgrp"><label>章节</label><input class="rch" placeholder="e.g. Chapter 3"></div><div class="fgrp"><label>页码</label><input class="rpg" placeholder="e.g. pp.42–55"></div></div><div class="fgrp"><label>练习题</label><input class="rex" placeholder="e.g. Ex 3A Q1–10"></div>';
+  document.getElementById('tb-refs').appendChild(div);
+}
+
+async function saveTB() {
+  const st=vv('tb-st'),su=vv('tb-su'),tp=vv('tb-tp').trim(),std=vv('tb-std').trim(),nt=vv('tb-nt').trim();
+  if (!tp) { alert('请填写知识点名称'); return; }
+  const refs = [...document.querySelectorAll('.ref-entry')].map(e=>({
+    book:e.querySelector('.rbn').value.trim(), chapter:e.querySelector('.rch').value.trim(),
+    pages:e.querySelector('.rpg').value.trim(), exercises:e.querySelector('.rex').value.trim(), status:'未开始'
+  })).filter(r=>r.book||r.chapter);
+  const record = { student:st, subject:su, topic:tp, standard:std, refs, note:nt };
+  const res = await apiPost({ action:'add', collection:'textbook', record });
+  if (res.ok) {
+    db.textbook.push(res.record);
+    buildTBF(); tf('tbf');
+    ['tb-tp','tb-std','tb-nt'].forEach(id=>sv(id,''));
+    document.querySelectorAll('.ref-entry').forEach((e,i)=>{ if(i>0)e.remove(); else e.querySelectorAll('input').forEach(x=>x.value=''); });
+    render(); flash('知识点已保存');
+  }
+}
+
+function buildTBF() {
+  const subs = [...new Set((db.textbook||[]).map(t=>t.subject))].filter(Boolean);
+  document.getElementById('tb-sf').innerHTML =
+    '<button class="fchip'+(tbFilter===''?' active':'')+'" data-s="" onclick="setTBF(\'\')">全部科目</button>'+
+    subs.map(s=>`<button class="fchip${tbFilter===s?' active':''}" data-s="${s}" onclick="setTBF('${s}')">${s}</button>`).join('');
+}
+function setTBF(s) { tbFilter=s; document.querySelectorAll('[data-s]').forEach(b=>b.classList.toggle('active',b.dataset.s===s)); rTB(); }
+
+async function updRefStatus(id,i,val) {
+  if (!requireParent()) return;
+  const tb = db.textbook.find(x=>x.id===id);
+  if (tb&&tb.refs[i]) { tb.refs[i].status=val; await apiPost({action:'updateRecord',collection:'textbook',id,record:{refs:tb.refs}}); }
+}
+
+async function delTB(id) {
+  if (!requireParent()) return;
+  if (!confirm('确认删除？')) return;
+  await apiPost({action:'delete',collection:'textbook',id});
+  db.textbook = db.textbook.filter(x=>x.id!==id);
+  buildTBF(); render();
+}
+
+function rTB() {
+  let list = fil(db.textbook);
+  const q = (vv('tb-q')||'').toLowerCase();
+  if (tbFilter) list = list.filter(t=>t.subject===tbFilter);
+  if (q) list = list.filter(t=>t.topic.toLowerCase().includes(q)||t.refs.some(r=>(r.book+r.chapter).toLowerCase().includes(q)));
+  document.getElementById('tbc').textContent = list.length;
+  const el = document.getElementById('tb-list');
+  if (!list.length) { el.innerHTML='<div class="empty">暂无教材索引记录</div>'; return; }
+  const sc = {'未开始':'#888','进行中':'#BA7517','已完成':'#27500A'};
+  el.innerHTML = list.slice().reverse().map(tb=>{
+    const sb = tb.student==='both' ? '<span class="badge bb">两人共用</span>' : `<span class="badge ${tb.student==='Henry'?'bh':'ba'}">${tb.student}</span>`;
+    const allD=tb.refs.length>0&&tb.refs.every(r=>r.status==='已完成');
+    const anyI=tb.refs.some(r=>r.status==='进行中');
+    const os=allD?'已完成':anyI?'进行中':'未开始';
+    const dc=tb.refs.filter(r=>r.status==='已完成').length;
+    const pct=tb.refs.length?Math.round(dc/tb.refs.length*100):0;
+    const delBtn = isParent ? `<button class="btn btn-sm btn-danger" onclick="delTB(${tb.id})">✕</button>` : '';
+    const rh = tb.refs.map((r,i)=>`<div class="ref-block"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px"><strong style="font-size:12px">${r.book||'未命名教材'}</strong>${isParent?`<select class="ssel" onchange="updRefStatus(${tb.id},${i},this.value)" style="color:${sc[r.status]}"><option${r.status==='未开始'?' selected':''}>未开始</option><option${r.status==='进行中'?' selected':''}>进行中</option><option${r.status==='已完成'?' selected':''}>已完成</option></select>`:`<span style="font-size:12px;color:${sc[r.status]}">${r.status}</span>`}</div>${r.chapter?`<div style="font-size:13px">${r.chapter}</div>`:''}${r.pages?`<div style="font-size:12px;color:var(--text3)">${r.pages}</div>`:''}${r.exercises?`<div style="font-size:12px;color:var(--text2)">练习：${r.exercises}</div>`:''}</div>`).join('');
+    return `<div class="card"><div class="card-hd"><div style="flex:1;min-width:0"><div class="card-meta">${sb}<span class="badge bsub">${tb.subject}</span>${tb.standard?`<span class="badge" style="background:var(--purple-l);color:var(--purple)">${tb.standard}</span>`:''}</div><div class="card-title">${tb.topic}</div>${tb.refs.length>1?`<div style="display:flex;align-items:center;gap:8px;margin-top:5px"><div class="pbw" style="flex:1"><div class="pbf" style="width:${pct}%"></div></div><span style="font-size:12px;color:var(--text3)">${dc}/${tb.refs.length}</span></div>`:''}</div><div style="display:flex;gap:5px;flex-shrink:0;align-items:flex-start"><span style="font-size:12px;color:${sc[os]}"><span class="pip" style="background:${sc[os]}"></span>${os}</span>${delBtn}</div></div>${tb.refs.length?rh:'<div style="font-size:13px;color:var(--text2)">暂无教材引用</div>'}${tb.note?`<div style="font-size:12px;color:var(--text2);margin-top:8px;padding-top:7px;border-top:1px solid var(--border)">备注：${tb.note}</div>`:''}<div style="font-size:11px;color:var(--text3);margin-top:7px">${fd(tb.added)} 录入</div></div>`;
+  }).join('');
+}
+
+// ── ERRORS ─────────────────────────────────────────────────
+async function saveErr() {
+  const st=vv('ef-st'),su=vv('ef-su').trim(),tp=vv('ef-tp').trim(),q=vv('ef-q').trim();
+  const wr=vv('ef-wr').trim(),co=vv('ef-co').trim(),re=vv('ef-re').trim(),lo=vv('ef-lo').trim();
+  const dt=vv('ef-dt')||today();
+  if (!tp||!q) { alert('请填写知识点和题目'); return; }
+  const btn=document.getElementById('ef-sv'); btn.textContent='AI分析中…'; btn.disabled=true;
+  let analysis='';
+  try { analysis=await callAI(`你是K12学习分析专家。学生：${st}，科目：${su}，知识点：${tp}。题目：${q}。错误答案：${wr}，正确答案：${co}。家长填写错误原因：${re||'未填写'}。用中文分析：1）深层根因 2）薄弱知识链 3）针对性练习建议2-3条。简洁100字以内。`); } catch(e) {}
+  const record={student:st,subject:su,topic:tp,question:q,wrong:wr,correct:co,reason:re,location:lo,analysis,errorDate:dt,mastered:false};
+  const res=await apiPost({action:'add',collection:'errors',record});
+  btn.textContent='保存并AI分析'; btn.disabled=false;
+  if (res.ok) {
+    db.errors.push(res.record);
+    tf('erf');
+    ['ef-su','ef-tp','ef-q','ef-wr','ef-co','ef-re','ef-lo'].forEach(id=>sv(id,''));
+    sv('ef-dt',today()); render(); flash('错题已保存');
+  }
+}
+
+async function toggleM(col,id) {
+  if (!requireParent()) return;
+  const r=db[col].find(x=>x.id===id); if(!r)return;
+  r.mastered=!r.mastered;
+  await apiPost({action:'update',collection:col,id,field:'mastered',value:r.mastered});
+  render();
+}
+
+async function delR(col,id) {
+  if (!requireParent()) return;
+  if (!confirm('确认删除？')) return;
+  await apiPost({action:'delete',collection:col,id});
+  db[col]=db[col].filter(x=>x.id!==id); render();
+}
+
+function rER() {
+  const list=fil(db.errors);
+  document.getElementById('erc').textContent=list.length;
+  const el=document.getElementById('er-list');
+  if (!list.length) { el.innerHTML='<div class="empty">暂无错题记录</div>'; return; }
+  el.innerHTML=list.slice().reverse().map(e=>{
+    const nr=nrv(e.added),days=dfn(nr);
+    const rl=days<=0?'<span class="badge bdue">今日复习</span>':days===1?'<span class="badge brev">明天</span>':`<span class="badge bsub">${days}天后</span>`;
+    const dd=e.errorDate||fd(e.added);
+    const mi=[];
+    if(e.reason) mi.push(`<div class="mi"><span class="mi-l">错误原因：</span><span class="mi-v">${e.reason}</span></div>`);
+    if(e.location) mi.push(`<div class="mi"><span class="mi-l">所在位置：</span><span class="mi-v">${e.location}</span></div>`);
+    const actions = isParent ? `<button class="btn btn-sm" onclick="toggleM('errors',${e.id})" style="${e.mastered?'color:#27500A':''}">✓</button><button class="btn btn-sm btn-danger" onclick="delR('errors',${e.id})">✕</button>` : '';
+    return `<div class="card"><div class="card-hd"><div style="flex:1;min-width:0"><div class="card-meta"><span class="badge ${e.student==='Henry'?'bh':'ba'}">${e.student}</span><span class="badge bsub">${e.subject||''}</span><span class="dtag">📅 ${dd}</span>${e.mastered?'<span class="badge" style="background:var(--green-l);color:var(--green)">已掌握</span>':''}</div><div class="card-title">${e.topic}</div></div><div style="display:flex;gap:5px;flex-shrink:0">${rl}${actions}</div></div><div style="font-size:13px;color:var(--text2);margin-bottom:6px;line-height:1.5">${(e.question||'').substring(0,150)}${(e.question||'').length>150?'...':''}</div><div style="font-size:12px;margin-bottom:6px"><span style="color:#A32D2D">✗ ${e.wrong||'—'}</span><span style="margin:0 8px;color:var(--text3)">→</span><span style="color:#27500A">✓ ${e.correct||'—'}</span></div>${mi.length?`<div class="meta">${mi.join('')}</div>`:''}${e.analysis?`<div class="ai-box"><div class="ai-lbl">AI根因分析</div>${e.analysis}</div>`:''}</div>`;
+  }).join('');
+}
+
+// ── GRAMMAR ────────────────────────────────────────────────
+async function saveGr() {
+  const st=vv('gf-st'),gr=vv('gf-gr'),et=vv('gf-et'),bk=vv('gf-bk').trim();
+  const ch=vv('gf-ch').trim(),q=vv('gf-q').trim(),wr=vv('gf-wr').trim(),co=vv('gf-co').trim();
+  const ex=vv('gf-ex').trim(),dt=vv('gf-dt')||today();
+  if (!q) { alert('请填写题目内容'); return; }
+  const btn=document.getElementById('gf-sv'); btn.textContent='AI分析中…'; btn.disabled=true;
+  let analysis='';
+  try { analysis=await callAI(`你是K12语法教学专家。学生：${st}，年级：${gr}，语法错误类型：${et}，教材：${bk}，章节：${ch}。题目：${q}。错误答案：${wr}，正确答案：${co}。家长说明：${ex||'无'}。用中文分析：1）错误根本原因（语法规则层面）2）相关语法规则要点 3）建议巩固练习1-2条。简洁80字以内。`); } catch(e) {}
+  const record={student:st,grade:gr,errorType:et,textbook:bk,chapter:ch,question:q,wrong:wr,correct:co,explanation:ex,analysis,errorDate:dt,mastered:false};
+  const res=await apiPost({action:'add',collection:'grammar',record});
+  btn.textContent='保存并AI分析'; btn.disabled=false;
+  if (res.ok) {
+    db.grammar.push(res.record);
+    buildGRF(); tf('grf');
+    ['gf-bk','gf-ch','gf-q','gf-wr','gf-co','gf-ex'].forEach(id=>sv(id,''));
+    sv('gf-dt',today()); render(); flash('语法记录已保存');
+  }
+}
+
+function buildGRF() {
+  const types=[...new Set((db.grammar||[]).map(g=>g.errorType))].filter(Boolean);
+  document.getElementById('gr-type-filters').innerHTML=
+    '<button class="fchip'+(grFilter===''?' active':'')+'" data-et="" onclick="setGRF(\'\')">全部类型</button>'+
+    types.map(t=>`<button class="fchip${grFilter===t?' active':''}" data-et="${t}" onclick="setGRF('${t}')">${t}</button>`).join('');
+}
+function setGRF(s) { grFilter=s; document.querySelectorAll('[data-et]').forEach(b=>b.classList.toggle('active',b.dataset.et===s)); rGR(); }
+
+function rGR() {
+  let list=fil(db.grammar);
+  const q=(vv('gr-q')||'').toLowerCase();
+  if (grFilter) list=list.filter(g=>g.errorType===grFilter);
+  if (q) list=list.filter(g=>(g.errorType+g.textbook+g.chapter+g.question).toLowerCase().includes(q));
+  document.getElementById('grc').textContent=list.length;
+  const el=document.getElementById('gr-list');
+  if (!list.length) { el.innerHTML='<div class="empty">暂无语法记录</div>'; return; }
+  el.innerHTML=list.slice().reverse().map(g=>{
+    const nr=nrv(g.added),days=dfn(nr);
+    const rl=days<=0?'<span class="badge bdue">今日复习</span>':days===1?'<span class="badge brev">明天</span>':`<span class="badge bsub">${days}天后</span>`;
+    const dd=g.errorDate||fd(g.added);
+    const actions=isParent?`<button class="btn btn-sm" onclick="toggleM('grammar',${g.id})" style="${g.mastered?'color:#27500A':''}">✓</button><button class="btn btn-sm btn-danger" onclick="delR('grammar',${g.id})">✕</button>`:'';
+    return `<div class="card"><div class="card-hd"><div style="flex:1;min-width:0"><div class="card-meta"><span class="badge ${g.student==='Henry'?'bh':'ba'}">${g.student}</span><span class="badge" style="background:#FFF3E0;color:#E65100">${g.errorType}</span><span class="badge bsub">${g.grade}</span><span class="dtag">📅 ${dd}</span>${g.mastered?'<span class="badge" style="background:var(--green-l);color:var(--green)">已掌握</span>':''}</div><div class="card-title">${g.errorType}</div></div><div style="display:flex;gap:5px;flex-shrink:0">${rl}${actions}</div></div><div style="font-size:13px;color:var(--text2);margin-bottom:6px;line-height:1.5">${(g.question||'').substring(0,150)}${(g.question||'').length>150?'...':''}</div><div style="font-size:12px;margin-bottom:6px"><span style="color:#A32D2D">✗ ${g.wrong||'—'}</span><span style="margin:0 8px;color:var(--text3)">→</span><span style="color:#27500A">✓ ${g.correct||'—'}</span></div><div class="meta">${g.textbook?`<div class="mi"><span class="mi-l">教材：</span><span class="mi-v">${g.textbook}</span></div>`:''}${g.chapter?`<div class="mi"><span class="mi-l">章节：</span><span class="mi-v">${g.chapter}</span></div>`:''}${g.explanation?`<div class="mi"><span class="mi-l">说明：</span><span class="mi-v">${g.explanation}</span></div>`:''}</div>${g.analysis?`<div class="ai-box"><div class="ai-lbl">AI语法分析</div>${g.analysis}</div>`:''}</div>`;
+  }).join('');
+}
+
+// ── WRITING ────────────────────────────────────────────────
+async function saveWr() {
+  const st=vv('wf-st'),ti=vv('wf-ti').trim(),ty=vv('wf-ty'),co=vv('wf-co').trim(),dr=vv('wf-dr'),nt=vv('wf-nt').trim();
+  if (!ti||!co) { alert('请填写标题和内容'); return; }
+  const btn=document.getElementById('wf-sv'); btn.textContent='AI评分中…'; btn.disabled=true;
+  let scoring={};
+  try {
+    const txt=await callAI(`You are a K12 writing teacher. Student:${st}, Grade:${st==='Henry'?'7th':'2nd'}, Assignment:${ti}(${ty}), Draft:${dr}.\n\nWriting:\n${co}\n\nReturn ONLY valid JSON(no markdown):\n{"overall":85,"ideas":80,"organization":85,"voice":90,"wc":75,"fluency":80,"conventions":85,"feedback":"2-3 sentence feedback in Chinese","focus":"Top 1 revision priority in Chinese"}`);
+    scoring=JSON.parse(txt.replace(/```json|```/g,'').trim());
+  } catch(e) {}
+  const ex=db.writings.find(w=>w.title===ti&&w.student===st);
+  if (ex) {
+    ex.drafts.push({draft:dr,content:co,note:nt,scoring,date:new Date().toISOString()});
+    await apiPost({action:'updateRecord',collection:'writings',id:ex.id,record:{drafts:ex.drafts}});
+  } else {
+    const record={student:st,title:ti,type:ty,note:nt,drafts:[{draft:dr,content:co,note:nt,scoring,date:new Date().toISOString()}]};
+    const res=await apiPost({action:'add',collection:'writings',record});
+    if(res.ok) db.writings.push(res.record);
+  }
+  btn.textContent='保存并AI评分'; btn.disabled=false;
+  tf('wrf'); ['wf-ti','wf-co','wf-nt'].forEach(id=>sv(id,'')); render(); flash('写作记录已保存');
+}
+
+function rWR() {
+  const list=fil(db.writings);
+  document.getElementById('wrc').textContent=list.length;
+  const el=document.getElementById('wr-list');
+  if (!list.length) { el.innerHTML='<div class="empty">暂无写作记录</div>'; return; }
+  el.innerHTML=list.slice().reverse().map(w=>{
+    const s=w.drafts[w.drafts.length-1]?.scoring||{};
+    const dims=[['Ideas',s.ideas],['Org.',s.organization],['Voice',s.voice],['W.C.',s.wc],['Fluency',s.fluency],['Conv.',s.conventions]];
+    const delBtn=isParent?`<button class="btn btn-sm btn-danger" onclick="delR('writings',${w.id})">✕</button>`:'';
+    return `<div class="card"><div class="card-hd"><div><div class="card-meta"><span class="badge ${w.student==='Henry'?'bh':'ba'}">${w.student}</span><span class="badge bsub">${w.type}</span><span class="dtag">📅 ${fd(w.added)}</span></div><div class="card-title">${w.title}</div></div><div style="display:flex;gap:5px;align-items:center">${s.overall?`<span style="font-size:18px;font-weight:600;color:${sm(s.overall)}">${s.overall}</span>`:''}${delBtn}</div></div><div style="margin-bottom:10px">${w.drafts.map(d=>`<div class="draft-row"><span style="font-weight:600;font-size:12px">Draft ${d.draft}</span><span class="dtag">${fd(d.date)}</span>${d.scoring?.overall?`<span style="font-size:13px;font-weight:600;color:${sm(d.scoring.overall)}">${d.scoring.overall}</span>`:''}<span style="font-size:12px;color:var(--text2);flex:1">${d.note||''}</span></div>`).join('')}</div>${s.overall?`<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-bottom:10px">${dims.map(([l,v])=>v?`<div style="background:var(--bg2);border-radius:5px;padding:5px 8px"><div style="font-size:11px;color:var(--text2)">${l}</div><div style="font-size:13px;font-weight:600;color:${sm(v)}">${v}</div></div>`:'').join('')}</div>`:''}${s.feedback?`<div class="ai-box"><div class="ai-lbl">AI反馈</div>${s.feedback}${s.focus?`<div style="margin-top:5px;font-weight:600">修改重点：${s.focus}</div>`:''}</div>`:''}</div>`;
+  }).join('');
+}
+
+// ── READING ────────────────────────────────────────────────
+function addQA() {
+  const c=document.querySelectorAll('.rq').length+1;
+  const d=document.createElement('div');
+  d.innerHTML=`<div class="fgrp"><label>问题 ${c}</label><input class="rq" placeholder="阅读理解问题"></div><div class="fgrp"><label>回答</label><textarea class="ra"></textarea></div>`;
+  document.getElementById('rf-qas').appendChild(d);
+}
+
+async function saveRd() {
+  const st=vv('rf-st'),bk=vv('rf-bk').trim(),au=vv('rf-au').trim(),pg=vv('rf-pg').trim(),nt=vv('rf-nt').trim();
+  const qs=[...document.querySelectorAll('.rq')].map(x=>x.value.trim());
+  const as=[...document.querySelectorAll('.ra')].map(x=>x.value.trim());
+  if (!bk) { alert('请填写书名'); return; }
+  const btn=document.getElementById('rf-sv'); btn.textContent='AI批改中…'; btn.disabled=true;
+  const qas=qs.map((q,i)=>({q,a:as[i]||'',result:'',feedback:''}));
+  for (let i=0;i<qas.length;i++) {
+    if (!qas[i].q||!qas[i].a) continue;
+    try {
+      const txt=await callAI(`Book:"${bk}",Student:${st}.\nQ:${qas[i].q}\nA:${qas[i].a}\nReturn JSON only(no markdown):{"result":"correct/partial/incorrect","feedback":"1-2 sentences in Chinese"}`);
+      const r=JSON.parse(txt.replace(/```json|```/g,'').trim());
+      qas[i].result=r.result||''; qas[i].feedback=r.feedback||'';
+    } catch(e) {}
+  }
+  const record={student:st,book:bk,author:au,pages:pg,note:nt,qas};
+  const res=await apiPost({action:'add',collection:'readings',record});
+  btn.textContent='保存并AI批改'; btn.disabled=false;
+  if (res.ok) {
+    db.readings.push(res.record);
+    tf('rdf');
+    ['rf-bk','rf-au','rf-pg','rf-nt'].forEach(id=>sv(id,''));
+    document.getElementById('rf-qas').innerHTML='<div class="fgrp"><label>问题 1</label><input class="rq" placeholder="阅读理解问题"></div><div class="fgrp"><label>孩子的回答</label><textarea class="ra"></textarea></div>';
+    render(); flash('阅读记录已保存');
+  }
+}
+
+function rRD() {
+  const list=fil(db.readings);
+  document.getElementById('rdc').textContent=list.length;
+  const el=document.getElementById('rd-list');
+  if (!list.length) { el.innerHTML='<div class="empty">暂无阅读记录</div>'; return; }
+  const rc={correct:'#27500A',partial:'#633806',incorrect:'#791F1F'};
+  const delBtn=(id)=>isParent?`<button class="btn btn-sm btn-danger" onclick="delR('readings',${id})">✕</button>`:'';
+  el.innerHTML=list.slice().reverse().map(r=>`<div class="card"><div class="card-hd"><div><div class="card-meta"><span class="badge ${r.student==='Henry'?'bh':'ba'}">${r.student}</span><span class="dtag">📅 ${fd(r.added)}</span></div><div class="card-title">${r.book}${r.author?` <span style="font-weight:400;color:var(--text2)">· ${r.author}</span>`:''}</div>${r.pages?`<div style="font-size:12px;color:var(--text2)">${r.pages}</div>`:''}</div>${delBtn(r.id)}</div>${(r.qas||[]).filter(q=>q.q).map((qa,i)=>`<div class="qa-row"><div style="font-weight:600;margin-bottom:3px">Q${i+1}. ${qa.q}</div><div style="color:var(--text2);margin-bottom:3px">${qa.a||'（未作答）'}</div>${qa.result?`<div style="font-size:12px;color:${rc[qa.result]||'#888'}">● ${qa.result==='correct'?'正确':qa.result==='partial'?'部分正确':'错误'}${qa.feedback?' · '+qa.feedback:''}</div>`:''}</div>`).join('')}${r.note?`<div style="font-size:12px;color:var(--text2);margin-top:8px">备注：${r.note}</div>`:''}</div>`).join('');
+}
+
+// ── HOMEWORK ────────────────────────────────────────────────
+let hwFilter = '';
+
+function setHWF(s) {
+  hwFilter = s;
+  document.querySelectorAll('[data-hs]').forEach(b => b.classList.toggle('active', b.dataset.hs === s));
+  rHW();
+}
+
+async function saveHW() {
+  const st  = vv('hw-st'), su = vv('hw-su'), co = vv('hw-co').trim();
+  const as  = vv('hw-as') || today();
+  const due = vv('hw-due');
+  const nt  = vv('hw-nt').trim();
+  if (!co) { alert('请填写作业内容'); return; }
+  const record = { student:st, subject:su, content:co, assignedDate:as, dueDate:due, note:nt, status:'未开始' };
+  const res = await apiPost({ action:'add', collection:'homework', record });
+  if (res.ok) {
+    if (!db.homework) db.homework = [];
+    db.homework.push(res.record);
+    tf('hwf');
+    ['hw-co','hw-due','hw-nt'].forEach(id => sv(id,''));
+    sv('hw-as', today());
+    rHW(); flash('作业已保存');
+  }
+}
+
+async function updHWStatus(id, val) {
+  const hw = (db.homework||[]).find(x => x.id === id);
+  if (!hw) return;
+  hw.status = val;
+  await apiPost({ action:'update', collection:'homework', id, field:'status', value:val });
+  rHW();
+}
+
+async function delHW(id) {
+  if (!requireParent()) return;
+  if (!confirm('确认删除？')) return;
+  await apiPost({ action:'delete', collection:'homework', id });
+  db.homework = (db.homework||[]).filter(x => x.id !== id);
+  rHW();
+}
+
+function hwDueLabel(dueDate) {
+  if (!dueDate) return '';
+  const days = dfn(dueDate + 'T23:59:59');
+  if (days < 0)  return '<span class="badge" style="background:#FCEBEB;color:#791F1F">已过期</span>';
+  if (days === 0) return '<span class="badge" style="background:#FCEBEB;color:#791F1F">今天截止</span>';
+  if (days === 1) return '<span class="badge" style="background:#FAEEDA;color:#633806">明天截止</span>';
+  if (days <= 3)  return `<span class="badge" style="background:#FAEEDA;color:#633806">${days}天后截止</span>`;
+  return `<span class="badge bsub">${fd(dueDate)} 截止</span>`;
+}
+
+function rHW() {
+  let list = fil(db.homework || []);
+  if (hwFilter) list = list.filter(h => h.status === hwFilter);
+  // Sort: incomplete first (by due date), then completed
+  list = list.slice().sort((a,b) => {
+    const order = {'未开始':0,'进行中':1,'已完成':2};
+    if (order[a.status] !== order[b.status]) return order[a.status] - order[b.status];
+    if (!a.dueDate && !b.dueDate) return 0;
+    if (!a.dueDate) return 1;
+    if (!b.dueDate) return -1;
+    return a.dueDate.localeCompare(b.dueDate);
+  });
+
+  document.getElementById('hwc').textContent = list.length;
+  const el = document.getElementById('hw-list');
+  if (!list.length) { el.innerHTML = '<div class="empty">暂无作业记录</div>'; return; }
+
+  const statusColors = { '未开始':'#888', '进行中':'#BA7517', '已完成':'#27500A' };
+  const statusBg     = { '未开始':'#f0f0f0', '进行中':'#FAEEDA', '已完成':'#EAF3DE' };
+
+  el.innerHTML = list.map(h => {
+    const sb = h.student === 'both'
+      ? '<span class="badge bb">两人共用</span>'
+      : `<span class="badge ${h.student==='Henry'?'bh':'ba'}">${h.student}</span>`;
+    const delBtn = isParent ? `<button class="btn btn-sm btn-danger" onclick="delHW(${h.id})">✕</button>` : '';
+    const dueLabel = hwDueLabel(h.dueDate);
+    const done = h.status === '已完成';
+
+    // Status selector — students can update their own status, parent can update all
+    const canEdit = isParent || h.student === curUser || h.student === 'both';
+    const statusCtrl = canEdit
+      ? `<select class="ssel" onchange="updHWStatus(${h.id},this.value)" style="color:${statusColors[h.status]};background:${statusBg[h.status]}">
+           <option${h.status==='未开始'?' selected':''}>未开始</option>
+           <option${h.status==='进行中'?' selected':''}>进行中</option>
+           <option${h.status==='已完成'?' selected':''}>已完成</option>
+         </select>`
+      : `<span style="font-size:12px;color:${statusColors[h.status]}">${h.status}</span>`;
+
+    return `<div class="card" style="${done?'opacity:0.7':''}">
+      <div class="card-hd">
+        <div style="flex:1;min-width:0">
+          <div class="card-meta">
+            ${sb}
+            <span class="badge bsub">${h.subject}</span>
+            <span class="dtag">📅 ${fd(h.assignedDate)}</span>
+            ${dueLabel}
+          </div>
+          <div style="font-size:13px;line-height:1.6;margin-top:6px;${done?'text-decoration:line-through;color:var(--text2)':''}">${h.content}</div>
+          ${h.note ? `<div style="font-size:12px;color:var(--text2);margin-top:5px">备注：${h.note}</div>` : ''}
+        </div>
+        <div style="display:flex;gap:6px;align-items:flex-start;flex-shrink:0">
+          ${statusCtrl}
+          ${delBtn}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── SCHEDULE ───────────────────────────────────────────────
+function rSC() {
+  const el=document.getElementById('sc-list');
+  const allItems=[
+    ...fil(db.errors||[]).filter(e=>!e.mastered).map(e=>({...e,_src:'errors',_label:e.topic,_type:'错题'})),
+    ...fil(db.grammar||[]).filter(g=>!g.mastered).map(g=>({...g,_src:'grammar',_label:g.errorType,_type:'语法'}))
+  ];
+  if (!allItems.length) { el.innerHTML='<div class="empty">暂无待复习项目</div>'; return; }
+  const rows=allItems.map(e=>({e,nr:nrv(e.added),days:dfn(nrv(e.added))})).sort((a,b)=>a.days-b.days);
+  const due=rows.filter(r=>r.days<=0), soon=rows.filter(r=>r.days>0);
+  let html='';
+  if (due.length) {
+    html+=`<div style="font-size:13px;font-weight:600;margin-bottom:8px">今日待复习 (${due.length})</div><div class="card" style="margin-bottom:14px">`;
+    html+=due.map(({e})=>`<div class="sch-row"><span class="badge ${e.student==='Henry'?'bh':'ba'}">${e.student}</span><span>${e._label} <span class="badge bsub" style="font-size:10px">${e._type}</span></span><span class="badge bdue">今日</span>${isParent?`<button class="btn btn-sm" onclick="toggleM('${e._src}',${e.id})">✓ 已复习</button>`:'<span style="font-size:12px;color:var(--text3)">待复习</span>'}</div>`).join('');
+    html+='</div>';
+  }
+  if (soon.length) {
+    html+=`<div style="font-size:13px;font-weight:600;margin-bottom:8px">即将复习</div><div class="card">`;
+    html+=soon.slice(0,20).map(({e,days,nr})=>`<div class="sch-row"><span class="badge ${e.student==='Henry'?'bh':'ba'}">${e.student}</span><span>${e._label} <span class="badge bsub" style="font-size:10px">${e._type}</span></span><span style="font-size:12px;color:var(--text3)">${fd(nr.toISOString())}</span><span style="font-size:12px;color:var(--text3)">${days}天后</span></div>`).join('');
+    html+='</div>';
+  }
+  el.innerHTML=html;
+}
+
+// ── TEST ───────────────────────────────────────────────────
+function setupTestStudentFilter() {
+  const sel=document.getElementById('ts-st');
+  if (!isParent) {
+    // Lock to current student
+    sel.innerHTML=`<option value="${curUser}">${curUser}</option>`;
+    sel.disabled=true;
+  } else {
+    sel.innerHTML='<option value="Henry">Henry</option><option value="Annabella">Annabella</option>';
+    sel.disabled=false;
+  }
+}
+
+function filterTopics() {
+  const st=document.getElementById('ts-st').value||curUser;
+  const src=document.getElementById('ts-src').value;
+  const arr=src==='grammar'?(db.grammar||[]):(db.errors||[]);
+  const topics=[...new Set(arr.filter(e=>e.student===st&&!e.mastered).map(e=>src==='grammar'?e.errorType:e.topic))];
+  document.getElementById('ts-tp').innerHTML='<option value="">-- 全部未掌握 --</option>'+topics.map(t=>`<option value="${t}">${t}</option>`).join('');
+}
+
+let tsSess=null;
+async function startTest() {
+  const st=document.getElementById('ts-st').value||curUser;
+  const src=document.getElementById('ts-src').value;
+  const tp=document.getElementById('ts-tp').value;
+  const arr=src==='grammar'?(db.grammar||[]):(db.errors||[]);
+  const labelKey=src==='grammar'?'errorType':'topic';
+  const items=arr.filter(e=>e.student===st&&!e.mastered&&(!tp||e[labelKey]===tp));
+  if (!items.length) { alert('暂无未掌握的题目'); return; }
+  const sample=items.sort(()=>Math.random()-0.5).slice(0,3);
+  document.getElementById('ts-setup').style.display='none';
+  const tc=document.getElementById('ts-content');
+  tc.style.display='block';
+  tc.innerHTML='<div class="loading-overlay"><span class="spinner"></span>AI 生成检测题目中…</div>';
+  tsSess={student:st,questions:[]};
+  for (const e of sample) {
+    const topic=src==='grammar'?e.errorType:e.topic;
+    try {
+      const txt=await callAI(`You are a K12 teacher. Student:${st}. Topic:"${topic}". Original error:"${e.question}". Wrong:"${e.wrong}". Correct:"${e.correct}". Generate a new similar practice question in English. Return JSON only(no markdown):{"question":"new question","hint":"brief hint or empty string","topic":"${topic}"}`);
+      tsSess.questions.push({...JSON.parse(txt.replace(/```json|```/g,'').trim()),originalId:e.id,answer:'',feedback:'',done:false});
+    } catch(err) {
+      tsSess.questions.push({question:e.question,topic,originalId:e.id,hint:'',answer:'',feedback:'',done:false});
+    }
+  }
+  renderTest();
+}
+
+function renderTest() {
+  document.getElementById('ts-content').innerHTML=
+    `<div style="margin-bottom:12px;display:flex;gap:8px;align-items:center"><button class="btn btn-sm" onclick="resetTest()">← Back</button><span style="font-size:13px;color:var(--text2)">${tsSess.student} · ${tsSess.questions.length} questions</span></div>`+
+    tsSess.questions.map((q,i)=>`<div class="test-q"><div style="font-size:14px;margin-bottom:10px;line-height:1.6">${q.question}</div>${q.hint?`<div style="font-size:12px;color:var(--text2);margin-bottom:8px">Hint: ${q.hint}</div>`:''}${!q.done?`<textarea style="width:100%;min-height:60px;font-size:13px;margin-bottom:8px" id="ta-${i}">${q.answer}</textarea><button class="btn btn-primary btn-sm" onclick="subAns(${i})">Submit ↗</button>`:`<div style="font-size:13px;color:var(--text2);margin-bottom:8px;font-style:italic">${q.answer}</div>`}${q.feedback?`<div class="fb-box"><div style="font-size:11px;font-weight:600;color:#0F6E56;margin-bottom:3px">Tutor Feedback</div>${q.feedback}</div>`:''}</div>`).join('');
+}
+
+async function subAns(i) {
+  const q=tsSess.questions[i];
+  const ans=document.getElementById('ta-'+i).value.trim();
+  if (!ans) return;
+  q.answer=ans;
+  const btn=document.querySelector(`#ta-${i}`).nextElementSibling;
+  btn.textContent='…'; btn.disabled=true;
+  try {
+    q.feedback=await callAI(`You are a Socratic tutor for a student. Question:"${q.question}". Student answer:"${ans}". Give Socratic feedback in English: acknowledge what's right, then ask one guiding question leading them to discover the gap. Encouraging, 2-3 sentences max.`);
+  } catch(e) { q.feedback='Good effort! Think carefully about your reasoning.'; }
+  q.done=true; renderTest();
+}
+
+function resetTest() {
+  tsSess=null;
+  document.getElementById('ts-setup').style.display='block';
+  document.getElementById('ts-content').style.display='none';
+  filterTopics();
+}
+
+// ── RENDER ALL ─────────────────────────────────────────────
+function render() {
+  if (curTab==='tb') rTB();
+  else if (curTab==='er') rER();
+  else if (curTab==='gr') rGR();
+  else if (curTab==='wr') rWR();
+  else if (curTab==='rd') rRD();
+  else if (curTab==='hw') rHW();
+  else if (curTab==='sc') rSC();
+}
+</script>
+</body>
+</html>

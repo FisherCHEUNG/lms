@@ -952,7 +952,33 @@ function rWR() {
     const s=w.drafts[w.drafts.length-1]?.scoring||{};
     const dims=[['Ideas',s.ideas],['Org.',s.organization],['Voice',s.voice],['W.C.',s.wc],['Fluency',s.fluency],['Conv.',s.conventions]];
     const delBtn=isParent?`<button class="btn btn-sm btn-danger" onclick="delR('writings',${w.id})">✕</button>`:'';
-    return `<div class="card"><div class="card-hd"><div><div class="card-meta"><span class="badge ${w.student==='Henry'?'bh':'ba'}">${w.student}</span><span class="badge bsub">${w.type}</span><span class="dtag">📅 ${fd(w.added)}</span></div><div class="card-title">${w.title}</div></div><div style="display:flex;gap:5px;align-items:center">${s.overall?`<span style="font-size:18px;font-weight:600;color:${sm(s.overall)}">${s.overall}</span>`:''}${delBtn}</div></div><div style="margin-bottom:10px">${w.drafts.map(d=>`<div class="draft-row"><span style="font-weight:600;font-size:12px">Draft ${d.draft}</span><span class="dtag">${fd(d.date)}</span>${d.scoring?.overall?`<span style="font-size:13px;font-weight:600;color:${sm(d.scoring.overall)}">${d.scoring.overall}</span>`:''}<span style="font-size:12px;color:var(--text2);flex:1">${d.note||''}</span></div>`).join('')}</div>${s.overall?`<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-bottom:10px">${dims.map(([l,v])=>v?`<div style="background:var(--bg2);border-radius:5px;padding:5px 8px"><div style="font-size:11px;color:var(--text2)">${l}</div><div style="font-size:13px;font-weight:600;color:${sm(v)}">${v}</div></div>`:'').join('')}</div>`:''}${s.feedback?`<div class="ai-box"><div class="ai-lbl">AI反馈</div>${s.feedback}${s.focus?`<div style="margin-top:5px;font-weight:600">修改重点：${s.focus}</div>`:''}</div>`:''}</div>`;
+    const draftsHtml=w.drafts.map(d=>`
+      <div style="margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+          <span style="font-weight:600;font-size:12px;background:var(--purple-l);color:var(--purple);padding:2px 8px;border-radius:10px">Draft ${d.draft}</span>
+          <span class="dtag">${fd(d.date)}</span>
+          ${d.scoring?.overall?`<span style="font-size:14px;font-weight:600;color:${sm(d.scoring.overall)}">${d.scoring.overall}</span>`:''}
+          ${d.note?`<span style="font-size:12px;color:var(--text2)">${d.note}</span>`:''}
+        </div>
+        ${d.content?`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:12px;font-size:13px;line-height:1.8;white-space:pre-wrap;margin-bottom:8px">${d.content}</div>`:''}
+        ${d.scoring?.overall?`<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-bottom:8px">${dims.map(([l,v])=>v?`<div style="background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:5px 8px"><div style="font-size:11px;color:var(--text2)">${l}</div><div style="font-size:13px;font-weight:600;color:${sm(v)}">${v}</div></div>`:'').join('')}</div>`:''}
+        ${d.scoring?.feedback?`<div class="ai-box"><div class="ai-lbl">AI反馈</div>${d.scoring.feedback}${d.scoring.focus?`<div style="margin-top:5px;font-weight:600">修改重点：${d.scoring.focus}</div>`:''}</div>`:''}
+      </div>`).join('');
+    return `<div class="card" style="padding-bottom:0">
+      <div class="card-hd" style="cursor:pointer;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--border)" onclick="toggleCard('w${w.id}')">
+        <div>
+          <div class="card-meta"><span class="badge ${w.student==='Henry'?'bh':'ba'}">${w.student}</span><span class="badge bsub">${w.type}</span><span class="dtag">📅 ${fd(w.added)}</span><span class="badge bsub">${w.drafts.length}稿</span></div>
+          <div class="card-title" style="display:flex;align-items:center;gap:6px"><span id="ci-w${w.id}" style="font-size:10px;color:var(--text3)">▼</span>${w.title}</div>
+        </div>
+        <div style="display:flex;gap:5px;align-items:center" onclick="event.stopPropagation()">
+          ${s.overall?`<span style="font-size:18px;font-weight:600;color:${sm(s.overall)}">${s.overall}</span>`:''}
+          ${delBtn}
+        </div>
+      </div>
+      <div id="cb-w${w.id}" class="card-body" style="max-height:99999px;padding-bottom:4px">
+        ${draftsHtml}
+      </div>
+    </div>`;
   }).join('');
 }
 

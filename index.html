@@ -590,6 +590,13 @@ async function apiGetSilent() {
   } catch(e) { return null; }
 }
 
+// Reload db from Sheet after any write operation
+async function reloadDB() {
+  await new Promise(r=>setTimeout(r,1200));
+  const fresh = await apiGetSilent();
+  if (fresh) { db = fresh; if (!db.homework) db.homework = []; }
+}
+
 async function loadData() {
   document.getElementById('tb-list').innerHTML = '<div class="loading-overlay"><span class="spinner"></span>加载中…</div>';
   db = await apiGet();
@@ -723,14 +730,12 @@ async function saveTB() {
     pages:e.querySelector('.rpg').value.trim(), exercises:e.querySelector('.rex').value.trim(), status:'未开始'
   })).filter(r=>r.book||r.chapter);
   const record = { student:st, subject:su, topic:tp, standard:std, refs, note:nt };
-  const res = await apiPost({ action:'add', collection:'textbook', record });
-  if (res.ok) {
-    db.textbook.push(res.record);
-    buildTBF(); tf('tbf');
-    ['tb-tp','tb-std','tb-nt'].forEach(id=>sv(id,''));
-    document.querySelectorAll('.ref-entry').forEach((e,i)=>{ if(i>0)e.remove(); else e.querySelectorAll('input').forEach(x=>x.value=''); });
-    render(); flash('知识点已保存');
-  }
+  await apiPost({ action:'add', collection:'textbook', record });
+  await reloadDB();
+  buildTBF(); tf('tbf');
+  ['tb-tp','tb-std','tb-nt'].forEach(id=>sv(id,''));
+  document.querySelectorAll('.ref-entry').forEach((e,i)=>{ if(i>0)e.remove(); else e.querySelectorAll('input').forEach(x=>x.value=''); });
+  render(); flash('知识点已保存');
 }
 
 function buildTBF() {
@@ -787,14 +792,12 @@ async function saveErr() {
   let analysis='';
   try { analysis=await callAI(`你是K12学习分析专家。学生：${st}，科目：${su}，知识点：${tp}。题目：${q}。错误答案：${wr}，正确答案：${co}。家长填写错误原因：${re||'未填写'}。用中文分析：1）深层根因 2）薄弱知识链 3）针对性练习建议2-3条。简洁100字以内。`); } catch(e) {}
   const record={student:st,subject:su,topic:tp,question:q,wrong:wr,correct:co,reason:re,location:lo,analysis,errorDate:dt,mastered:false};
-  const res=await apiPost({action:'add',collection:'errors',record});
+  await apiPost({action:'add',collection:'errors',record});
   btn.textContent='保存并AI分析'; btn.disabled=false;
-  if (res.ok) {
-    db.errors.push(res.record);
-    tf('erf');
-    ['ef-su','ef-tp','ef-q','ef-wr','ef-co','ef-re','ef-lo'].forEach(id=>sv(id,''));
-    sv('ef-dt',today()); render(); flash('错题已保存');
-  }
+  await reloadDB();
+  tf('erf');
+  ['ef-su','ef-tp','ef-q','ef-wr','ef-co','ef-re','ef-lo'].forEach(id=>sv(id,''));
+  sv('ef-dt',today()); render(); flash('错题已保存');
 }
 
 async function toggleM(col,id) {
@@ -862,14 +865,12 @@ async function saveGr() {
   let analysis='';
   try { analysis=await callAI(`你是K12语法教学专家。学生：${st}，年级：${gr}，语法错误类型：${et}，教材：${bk}，章节：${ch}。题目：${q}。错误答案：${wr}，正确答案：${co}。家长说明：${ex||'无'}。用中文分析：1）错误根本原因（语法规则层面）2）相关语法规则要点 3）建议巩固练习1-2条。简洁80字以内。`); } catch(e) {}
   const record={student:st,grade:gr,errorType:et,textbook:bk,chapter:ch,question:q,wrong:wr,correct:co,explanation:ex,analysis,errorDate:dt,mastered:false};
-  const res=await apiPost({action:'add',collection:'grammar',record});
+  await apiPost({action:'add',collection:'grammar',record});
   btn.textContent='保存并AI分析'; btn.disabled=false;
-  if (res.ok) {
-    db.grammar.push(res.record);
-    buildGRF(); tf('grf');
-    ['gf-bk','gf-ch','gf-q','gf-wr','gf-co','gf-ex'].forEach(id=>sv(id,''));
-    sv('gf-dt',today()); render(); flash('语法记录已保存');
-  }
+  await reloadDB();
+  buildGRF(); tf('grf');
+  ['gf-bk','gf-ch','gf-q','gf-wr','gf-co','gf-ex'].forEach(id=>sv(id,''));
+  sv('gf-dt',today()); render(); flash('语法记录已保存');
 }
 
 function buildGRF() {
@@ -932,13 +933,16 @@ async function saveWr() {
   } catch(e) {}
   const ex=db.writings.find(w=>w.title===ti&&w.student===st);
   if (ex) {
-    ex.drafts.push({draft:dr,content:co,note:nt,scoring,date:new Date().toISOString()});
-    await apiPost({action:'updateRecord',collection:'writings',id:ex.id,record:{drafts:ex.drafts}});
+    const newDrafts=[...ex.drafts,{draft:dr,content:co,note:nt,scoring,date:new Date().toISOString()}];
+    await apiPost({action:'updateRecord',collection:'writings',id:ex.id,record:{drafts:newDrafts}});
   } else {
     const record={student:st,title:ti,type:ty,note:nt,drafts:[{draft:dr,content:co,note:nt,scoring,date:new Date().toISOString()}]};
-    const res=await apiPost({action:'add',collection:'writings',record});
-    if(res.ok) db.writings.push(res.record);
+    await apiPost({action:'add',collection:'writings',record});
   }
+  // Always reload from Sheet to get accurate state (no-cors POST can't return data)
+  await new Promise(r=>setTimeout(r,1200));
+  const fresh=await apiGetSilent();
+  if(fresh){ db=fresh; if(!db.homework)db.homework=[]; }
   btn.textContent='保存并AI评分'; btn.disabled=false;
   tf('wrf'); ['wf-ti','wf-co','wf-nt'].forEach(id=>sv(id,'')); render(); flash('写作记录已保存');
 }
@@ -1006,15 +1010,13 @@ async function saveRd() {
     } catch(e) {}
   }
   const record={student:st,book:bk,author:au,pages:pg,note:nt,qas};
-  const res=await apiPost({action:'add',collection:'readings',record});
+  await apiPost({action:'add',collection:'readings',record});
   btn.textContent='保存并AI批改'; btn.disabled=false;
-  if (res.ok) {
-    db.readings.push(res.record);
-    tf('rdf');
-    ['rf-bk','rf-au','rf-pg','rf-nt'].forEach(id=>sv(id,''));
-    document.getElementById('rf-qas').innerHTML='<div class="fgrp"><label>问题 1</label><input class="rq" placeholder="阅读理解问题"></div><div class="fgrp"><label>孩子的回答</label><textarea class="ra"></textarea></div>';
-    render(); flash('阅读记录已保存');
-  }
+  await reloadDB();
+  tf('rdf');
+  ['rf-bk','rf-au','rf-pg','rf-nt'].forEach(id=>sv(id,''));
+  document.getElementById('rf-qas').innerHTML='<div class="fgrp"><label>问题 1</label><input class="rq" placeholder="阅读理解问题"></div><div class="fgrp"><label>孩子的回答</label><textarea class="ra"></textarea></div>';
+  render(); flash('阅读记录已保存');
 }
 
 function rRD() {
@@ -1043,15 +1045,12 @@ async function saveHW() {
   const nt  = vv('hw-nt').trim();
   if (!co) { alert('请填写作业内容'); return; }
   const record = { student:st, subject:su, content:co, assignedDate:as, dueDate:due, note:nt, status:'未开始' };
-  const res = await apiPost({ action:'add', collection:'homework', record });
-  if (res.ok) {
-    if (!db.homework) db.homework = [];
-    db.homework.push(res.record);
-    tf('hwf');
-    ['hw-co','hw-due','hw-nt'].forEach(id => sv(id,''));
-    sv('hw-as', today());
-    rHW(); flash('作业已保存');
-  }
+  await apiPost({ action:'add', collection:'homework', record });
+  await reloadDB();
+  tf('hwf');
+  ['hw-co','hw-due','hw-nt'].forEach(id => sv(id,''));
+  sv('hw-as', today());
+  rHW(); flash('作业已保存');
 }
 
 async function updHWStatus(id, val) {

@@ -501,23 +501,70 @@ function setSS(msg, cls='') {
 async function apiGet() {
   setSS('读取中…','saving');
   try {
-    const r = await fetch(API_URL);
-    const j = await r.json();
+    // Use no-cors isn't enough for reading, so we use a script tag trick
+    // to bypass CORS entirely for GET requests
+    const data = await new Promise((resolve, reject) => {
+      const cbName = '_lms_cb_' + Date.now();
+      const script = document.createElement('script');
+      const timeout = setTimeout(() => {
+        delete window[cbName];
+        document.head.removeChild(script);
+        reject(new Error('timeout'));
+      }, 15000);
+      window[cbName] = function(json) {
+        clearTimeout(timeout);
+        delete window[cbName];
+        document.head.removeChild(script);
+        resolve(json);
+      };
+      script.src = API_URL + '?action=read&callback=' + cbName;
+      script.onerror = () => { clearTimeout(timeout); reject(new Error('script error')); };
+      document.head.appendChild(script);
+    });
     setSS('已同步');
-    return j.data || db;
-  } catch(e) { setSS('读取失败','err'); return db; }
+    return data.data || db;
+  } catch(e) {
+    // Fallback: try plain fetch (works if CORS is properly set)
+    try {
+      const r = await fetch(API_URL + '?action=read');
+      const j = await r.json();
+      setSS('已同步');
+      return j.data || db;
+    } catch(e2) {
+      setSS('读取失败','err');
+      return db;
+    }
+  }
 }
 
 async function apiPost(body) {
   setSS('保存中…','saving');
   try {
     const payload = encodeURIComponent(JSON.stringify(body));
-    const url = API_URL + '?action=post&payload=' + payload;
-    const r = await fetch(url, { method:'GET' });
-    const j = await r.json();
-    setSS(j.ok ? '已保存 ✓' : '保存失败', j.ok ? '' : 'err');
-    return j;
-  } catch(e) { setSS('保存失败','err'); return {ok:false}; }
+    const data = await new Promise((resolve, reject) => {
+      const cbName = '_lms_cb_' + Date.now();
+      const script = document.createElement('script');
+      const timeout = setTimeout(() => {
+        delete window[cbName];
+        if (document.head.contains(script)) document.head.removeChild(script);
+        reject(new Error('timeout'));
+      }, 20000);
+      window[cbName] = function(json) {
+        clearTimeout(timeout);
+        delete window[cbName];
+        if (document.head.contains(script)) document.head.removeChild(script);
+        resolve(json);
+      };
+      script.src = API_URL + '?action=post&payload=' + payload + '&callback=' + cbName;
+      script.onerror = () => { clearTimeout(timeout); reject(new Error('script error')); };
+      document.head.appendChild(script);
+    });
+    setSS(data.ok ? '已保存 ✓' : '保存失败', data.ok ? '' : 'err');
+    return data;
+  } catch(e) {
+    setSS('保存失败','err');
+    return { ok: false };
+  }
 }
 
 async function loadData() {
